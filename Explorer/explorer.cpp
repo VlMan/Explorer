@@ -128,26 +128,8 @@ void Explorer::RepaintItems()
 
 	for (const auto item : list_items_)
 	{
-		switch (item->GetType())
-		{
-		case item_type::folder:
-		{
-			const auto folder = qobject_cast<Folder*>(item);
-			folder->SetRect(FindOptimizeNextPosition());
+		item->SetRect(FindOptimizeNextPosition());
 
-		} break;
-		case item_type::exe:
-		{
-			const auto exe = qobject_cast<Executable*>(item);
-			exe->SetRect(FindOptimizeNextPosition());
-
-		} break;
-		case item_type::unknown:
-		{
-			item->SetRect(FindOptimizeNextPosition());
-
-		} break;
-		}
 		current_item_count_++;
 		current_horizontal_allocated_space_ = ((in_row_count_item_.value(current_count_row_item_) * current_size_item_) + (in_row_count_item_.value(current_count_row_item_) * current_space_item_));
 		current_horizontal_unallocated_space_ = current_general_frame_size_->width() - current_horizontal_allocated_space_;
