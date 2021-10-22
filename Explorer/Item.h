@@ -13,7 +13,7 @@ enum class item_type
 	exe
 };
 
-#define NODISCARD [[nodiscard]]
+#define NODISCARD [[nodiscard]]  // NOLINT(cppcoreguidelines-macro-usage)
 
 class Item : public ClicableWidget
 {

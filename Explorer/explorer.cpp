@@ -2,7 +2,7 @@
 
 constexpr int sys_tick_timer = 100;
 constexpr auto default_style_sheet = "border: 0px;";
-auto default_geometry = QRect(0, 0, 100, 78);
+auto default_geometry = QRect();
 
 static QVector<QString> list_format_file {  // NOLINT(clang-diagnostic-exit-time-destructors)
 	".exe",
@@ -17,7 +17,7 @@ Explorer::Explorer(QWidget *parent)
 	lbl_folder_(new QPixmap("images/folder.png", "PNG")),
 	lbl_executable_(new QPixmap("images/exe.png", "PNG")),
 	lbl_picture_png_(new QPixmap("images/picture_png.png", "PNG")),
-	current_size_item_(70),
+	current_size_item_(100),
 	current_space_item_(6),
 	current_item_count_(0),
 	current_count_row_item_(0),
@@ -35,7 +35,7 @@ Explorer::Explorer(QWidget *parent)
 	*lbl_executable_ = lbl_executable_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 	*lbl_picture_png_ = lbl_picture_png_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 
-	current_general_frame_size_ = &ui_->general_frame->geometry();
+	current_general_frame_size_ = &ui_->general_frame->geometry(); // give ref to general frame geometry
 
 	current_horizontal_allocated_space_ = 0;
 	current_horizontal_unallocated_space_ = current_general_frame_size_->width();
@@ -81,7 +81,7 @@ Item* Explorer::AddNewItem(const QString& path, const QString& absolute_path, co
 	case item_type::picture:
 	{
 		item = new Picture(ui_->general_frame, default_geometry, "PNG", path, absolute_path);
-		item->SetPixmap(*lbl_picture_png_);
+		item->SetPixmap();
 		break;
 	}
 
@@ -168,7 +168,10 @@ void Explorer::RepaintItemsInStep(const int step)
 {
 	for (const auto item : list_items_)
 	{
-		item->SetRect(QRect(item->GetSize().left(), item->GetSize().top() - (current_size_item_ + current_space_item_) * step, current_size_item_, current_size_item_));
+		item->SetRect(QRect(item->GetSize().left(),
+							item->GetSize().top() - (current_size_item_ + current_space_item_) * step,
+							current_size_item_, 
+							current_size_item_));
 	}
 }
 
@@ -253,9 +256,9 @@ bool Explorer::eventFilter(QObject* watched, QEvent* event)
 			}
 			else
 			{
-				const auto startOpenFiler = clock();
+				const auto startOpenFile = clock();
 				OpenFile();
-				qDebug() << "Duration open file =" << (static_cast<double>(clock()) - static_cast<double>(startOpenFiler)) / static_cast<double>(CLOCKS_PER_SEC);
+				qDebug() << "Duration open file =" << (static_cast<double>(clock()) - static_cast<double>(startOpenFile)) / static_cast<double>(CLOCKS_PER_SEC);
 			}
 		}
 		qDebug() << "Duration =" << (static_cast<double>(clock()) - static_cast<double>(start)) / static_cast<double>(CLOCKS_PER_SEC);

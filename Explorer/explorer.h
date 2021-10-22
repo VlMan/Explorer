@@ -56,7 +56,7 @@ public:
 	~Explorer() override { for (const auto item : list_items_) delete item; }
 
 private:
-	Ui::ExplorerClass *ui_;
+	QScopedPointer<Ui::ExplorerClass> ui_;
 
 	Item* AddNewItem(const QString& path, const QString& absolute_path, item_type type = item_type::folder);
 
