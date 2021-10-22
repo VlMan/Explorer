@@ -2,7 +2,12 @@
 
 void Picture::SetPixmap(const QPixmap& pix)
 {
-	this->setPixmap(pix);
+	if (!pix.isNull())
+		this->setPixmap(pix);
+	
+	QPixmap pixTmp(GetAbsolutePath());
+	pixTmp = pixTmp.scaled(SizeLabel().size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+	this->setPixmap(pixTmp);
 }
 
 void Picture::Show()

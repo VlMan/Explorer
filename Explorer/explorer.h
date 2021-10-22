@@ -17,7 +17,7 @@ class Executable;
 class Folder;
 class Item;
 
-constexpr auto program_version = "v0.1.2210.4";
+constexpr auto program_version = "v0.1.2210.5";
 
 class Explorer final : public QMainWindow
 {
@@ -67,7 +67,10 @@ private:
 	bool eventFilter(QObject* watched, QEvent* event) override;
 
 	NODISCARD int GetMaximumValueVerticalBar() const;
-	
+
+	void Update();
+	void GoBack();
+
 private slots:
 	void SysTick() const;
 	void OpenFolder();

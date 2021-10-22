@@ -63,4 +63,5 @@ protected:
 	void setPixmap(const QPixmap& pix);
 	NODISCARD QRect SizeLabel() const { return *size_lbl_; }
 
+	NODISCARD QString GetAbsolutePath() const { return absolute_path_; }
 };

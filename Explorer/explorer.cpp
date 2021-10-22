@@ -65,16 +65,32 @@ Item* Explorer::AddNewItem(const QString& path, const QString& absolute_path, co
 	switch(type)
 	{
 	case item_type::folder:
-	{ item = new Folder(ui_->general_frame, default_geometry, path, absolute_path); item->SetPixmap(*lbl_folder_); break; }
+	{
+		item = new Folder(ui_->general_frame, default_geometry, path, absolute_path);
+		item->SetPixmap(*lbl_folder_);
+		break;
+	}
 
 	case item_type::exe:
-	{ item = new Executable(ui_->general_frame, default_geometry, path, absolute_path); item->SetPixmap(*lbl_executable_); break; }
+	{
+		item = new Executable(ui_->general_frame, default_geometry, path, absolute_path);
+		item->SetPixmap(*lbl_executable_);
+		break;
+	}
 
 	case item_type::picture:
-	{ item = new Picture(ui_->general_frame, default_geometry, "PNG", path, absolute_path); item->SetPixmap(*lbl_picture_png_); break; }
+	{
+		item = new Picture(ui_->general_frame, default_geometry, "PNG", path, absolute_path);
+		item->SetPixmap(*lbl_picture_png_);
+		break;
+	}
 
 	case item_type::unknown:
-	{ item = new Item(ui_->general_frame, default_geometry, path, absolute_path); item->SetPixmap(*lbl_unknown_); break; }
+	{
+		item = new Item(ui_->general_frame, default_geometry, path, absolute_path);
+		item->SetPixmap(*lbl_unknown_);
+		break;
+	}
 	}
 	item->SetType(type);
 	item->setObjectName(absolute_path);
@@ -98,7 +114,7 @@ QRect Explorer::FindOptimizeNextPosition()
 			current_size_item_);
 	}
 
-	if (current_horizontal_unallocated_space_ > (current_size_item_ + current_space_item_ * 2)) // if there is free space for item
+	if (current_horizontal_unallocated_space_ > current_size_item_ + current_space_item_ * 2) // if there is free space for item
 	{
 		const int lastItemCount = in_row_count_item_.value(current_count_row_item_);
 		in_row_count_item_.remove(current_count_row_item_);
@@ -106,7 +122,7 @@ QRect Explorer::FindOptimizeNextPosition()
 
 		return QRect(
 			current_horizontal_allocated_space_ + current_space_item_,
-			(current_vertical_allocated_space_ - current_size_item_),
+			current_vertical_allocated_space_ - current_size_item_,
 			current_size_item_, 
 			current_size_item_);
 	}
@@ -138,10 +154,10 @@ void Explorer::RepaintItems()
 		item->SetRect(FindOptimizeNextPosition());
 
 		current_item_count_++;
-		current_horizontal_allocated_space_ = ((in_row_count_item_.value(current_count_row_item_) * current_size_item_) + (in_row_count_item_.value(current_count_row_item_) * current_space_item_));
+		current_horizontal_allocated_space_ = in_row_count_item_.value(current_count_row_item_) * current_size_item_ + in_row_count_item_.value(current_count_row_item_) * current_space_item_;
 		current_horizontal_unallocated_space_ = current_general_frame_size_->width() - current_horizontal_allocated_space_;
 
-		current_vertical_allocated_space_ = ((current_count_row_item_ * current_size_item_) + (current_count_row_item_ * current_space_item_));
+		current_vertical_allocated_space_ = current_count_row_item_ * current_size_item_ + current_count_row_item_ * current_space_item_;
 		current_vertical_unallocated_space_ = current_general_frame_size_->height() - current_vertical_allocated_space_;
 	}
 
@@ -152,7 +168,7 @@ void Explorer::RepaintItemsInStep(const int step)
 {
 	for (const auto item : list_items_)
 	{
-		item->SetRect(QRect(item->GetSize().left(), item->GetSize().top() - ((current_size_item_ + current_space_item_) * step), current_size_item_, current_size_item_));
+		item->SetRect(QRect(item->GetSize().left(), item->GetSize().top() - (current_size_item_ + current_space_item_) * step, current_size_item_, current_size_item_));
 	}
 }
 
@@ -162,10 +178,7 @@ bool Explorer::eventFilter(QObject* watched, QEvent* event)
 	{
 		if (watched == this)
 		{
-			const auto vBarValue = ui_->v_bar_general->value();
-			ui_->v_bar_general->setValue(0);
-			RepaintItems();
-			ui_->v_bar_general->setValue(vBarValue);
+			Update();
 		}
 		return true;
 	}
@@ -179,9 +192,7 @@ bool Explorer::eventFilter(QObject* watched, QEvent* event)
 	{
 		if (dynamic_cast<QMouseEvent*>(event)->button() == Qt::BackButton)
 		{
-			ui_->le_path->setText(ui_->le_path->text().left(ui_->le_path->text().lastIndexOf("/")));
-			current_directory_ = ui_->le_path->text();
-			OpenFolder();
+			GoBack();
 		}
 		else if (dynamic_cast<QMouseEvent*>(event)->button() == Qt::LeftButton)
 		{
@@ -212,22 +223,19 @@ bool Explorer::eventFilter(QObject* watched, QEvent* event)
 		}
 		else if (key == Qt::Key_Escape)
 		{
-			ui_->le_path->setText(ui_->le_path->text().left(ui_->le_path->text().lastIndexOf("/")));
-			current_directory_ = ui_->le_path->text();
-			OpenFolder();			
+			GoBack();
 		}
 		else if (key == Qt::Key_F5)
 		{
-			const auto vBarValue = ui_->v_bar_general->value();
-			ui_->v_bar_general->setValue(0);
-			RepaintItems();
-			ui_->v_bar_general->setValue(vBarValue);
+			Update();
 		}
 		return true;
 	}
 
 	if (event->type() == QEvent::MouseButtonDblClick)
 	{
+		if (dynamic_cast<QMouseEvent*>(event)->button() != Qt::LeftButton) return true;
+		
 		qDebug() << "Double click";
 		const auto start = clock();
 
@@ -259,10 +267,26 @@ bool Explorer::eventFilter(QObject* watched, QEvent* event)
 
 int Explorer::GetMaximumValueVerticalBar() const
 {
-	if (current_size_item_ < (current_vertical_unallocated_space_ + current_size_item_))
+	if (current_size_item_ < current_vertical_unallocated_space_ + current_size_item_)
 		return 0;
 
 	return (current_vertical_allocated_space_ - (current_vertical_unallocated_space_ < 0 ? 0 : current_vertical_unallocated_space_)) / (current_size_item_ + current_space_item_);
+}
+
+void Explorer::Update()
+{
+	const auto vBarValue = ui_->v_bar_general->value();
+	ui_->v_bar_general->setValue(0);
+	RepaintItems();
+	ui_->v_bar_general->setValue(vBarValue);
+}
+
+void Explorer::GoBack()
+{
+	if (current_directory_ == "C:/" || current_directory_ == "D:/") return;
+	ui_->le_path->setText(ui_->le_path->text().left(ui_->le_path->text().lastIndexOf("/")));
+	current_directory_ = ui_->le_path->text();
+	OpenFolder();
 }
 
 void Explorer::SysTick() const
