@@ -2,7 +2,7 @@
 
 constexpr int sys_tick_timer = 100;
 constexpr auto default_style_sheet = "border: 0px;";
-constexpr auto default_geometry = QRect(0, 0, 100, 78);
+auto default_geometry = QRect(0, 0, 100, 78);
 
 static QVector<QString> list_format_file {  // NOLINT(clang-diagnostic-exit-time-destructors)
 	".exe",
@@ -17,8 +17,8 @@ Explorer::Explorer(QWidget *parent)
 	lbl_folder_(new QPixmap("images/folder.png", "PNG")),
 	lbl_executable_(new QPixmap("images/exe.png", "PNG")),
 	lbl_picture_png_(new QPixmap("images/picture_png.png", "PNG")),
-	current_size_item_(100),
-	current_space_item_(10),
+	current_size_item_(70),
+	current_space_item_(6),
 	current_item_count_(0),
 	current_count_row_item_(0),
 	previous_scroll_bar_value_(0),
@@ -28,12 +28,15 @@ Explorer::Explorer(QWidget *parent)
 	this->installEventFilter(this);
 	ui_->le_path->setText(current_directory_);
 
+	default_geometry = QRect(0, 0, current_size_item_, current_size_item_ - 22);
+
 	*lbl_unknown_ = lbl_unknown_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 	*lbl_folder_ = lbl_folder_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 	*lbl_executable_ = lbl_executable_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 	*lbl_picture_png_ = lbl_picture_png_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 
 	current_general_frame_size_ = &ui_->general_frame->geometry();
+
 	current_horizontal_allocated_space_ = 0;
 	current_horizontal_unallocated_space_ = current_general_frame_size_->width();
 
@@ -77,12 +80,7 @@ Item* Explorer::AddNewItem(const QString& path, const QString& absolute_path, co
 	item->setObjectName(absolute_path);
 	item->setStyleSheet(default_style_sheet);
 	item->installEventFilter(this);
-
-	connect(item, &Item::clicked, this, [&]() -> void
-	{
-		ui_->le_path->setText(qobject_cast<Item*>(sender())->objectName());
-	});
-
+	
 	item->show();
 	return item;
 }
@@ -154,7 +152,7 @@ void Explorer::RepaintItemsInStep(const int step)
 {
 	for (const auto item : list_items_)
 	{
-		item->SetRect(QRect(item->GetSize().left(), item->GetSize().top() - (current_size_item_ + current_space_item_) * step, current_size_item_, current_size_item_));
+		item->SetRect(QRect(item->GetSize().left(), item->GetSize().top() - ((current_size_item_ + current_space_item_) * step), current_size_item_, current_size_item_));
 	}
 }
 
@@ -164,8 +162,10 @@ bool Explorer::eventFilter(QObject* watched, QEvent* event)
 	{
 		if (watched == this)
 		{
+			const auto vBarValue = ui_->v_bar_general->value();
 			ui_->v_bar_general->setValue(0);
 			RepaintItems();
+			ui_->v_bar_general->setValue(vBarValue);
 		}
 		return true;
 	}
@@ -173,6 +173,25 @@ bool Explorer::eventFilter(QObject* watched, QEvent* event)
 	if (event->type() == QEvent::Wheel)
 	{
 		ui_->v_bar_general->setValue(ui_->v_bar_general->value() + (dynamic_cast<QWheelEvent*>(event)->delta() < 0 ? 1 : -1));
+	}
+
+	if (event->type() == QEvent::MouseButtonPress)
+	{
+		if (dynamic_cast<QMouseEvent*>(event)->button() == Qt::BackButton)
+		{
+			ui_->le_path->setText(ui_->le_path->text().left(ui_->le_path->text().lastIndexOf("/")));
+			current_directory_ = ui_->le_path->text();
+			OpenFolder();
+		}
+		else if (dynamic_cast<QMouseEvent*>(event)->button() == Qt::LeftButton)
+		{
+			if (std::any_of(
+				list_items_.begin(),
+				list_items_.end(),
+				[=](const Item* item) -> bool { return watched == item; }))
+			ui_->le_path->setText(qobject_cast<Item*>(watched)->objectName());
+		}
+		return true;
 	}
 
 	if (event->type() == QEvent::KeyPress)
@@ -196,6 +215,13 @@ bool Explorer::eventFilter(QObject* watched, QEvent* event)
 			ui_->le_path->setText(ui_->le_path->text().left(ui_->le_path->text().lastIndexOf("/")));
 			current_directory_ = ui_->le_path->text();
 			OpenFolder();			
+		}
+		else if (key == Qt::Key_F5)
+		{
+			const auto vBarValue = ui_->v_bar_general->value();
+			ui_->v_bar_general->setValue(0);
+			RepaintItems();
+			ui_->v_bar_general->setValue(vBarValue);
 		}
 		return true;
 	}
@@ -303,5 +329,5 @@ void Explorer::ScrollBarHandler(const int value)
 	const auto startScrollRepaint = clock();
 	RepaintItemsInStep(value - previous_scroll_bar_value_);
 	previous_scroll_bar_value_ = value;
-	qDebug() << "Duration scroll repaint =" << (static_cast<double>(clock()) - static_cast<double>(startScrollRepaint)) / static_cast<double>(CLOCKS_PER_SEC);
+	qDebug() << "Duration scroll repaint =" << (static_cast<double>(clock()) - static_cast<double>(startScrollRepaint)) / static_cast<double>(CLOCKS_PER_SEC) << " Count item =" << list_items_.size();
 }
