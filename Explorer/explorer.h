@@ -5,17 +5,19 @@
 #include <QTimer>
 #include <QKeyEvent>
 #include <QProcess>
+#include <QDesktopServices>
 #include <QThread>
 
 #include "Executable.h"
 #include "Folder.h"
+#include "Picture.h"
 #include "ui_explorer.h"
 
 class Executable;
 class Folder;
 class Item;
 
-constexpr auto program_version = "v0.1.2210.1";
+constexpr auto program_version = "v0.1.2210.3";
 
 class Explorer final : public QMainWindow
 {
@@ -32,6 +34,7 @@ class Explorer final : public QMainWindow
 	QScopedPointer<QPixmap> lbl_unknown_;
 	QScopedPointer<QPixmap> lbl_folder_;
 	QScopedPointer<QPixmap> lbl_executable_;
+	QScopedPointer<QPixmap> lbl_picture_png_;
 
 	int current_size_item_;
 	int current_space_item_;
@@ -63,11 +66,11 @@ private:
 
 	bool eventFilter(QObject* watched, QEvent* event) override;
 
-	NODISCARD int GetCurrentValueVerticalBar() const;
+	NODISCARD int GetMaximumValueVerticalBar() const;
 	
 private slots:
 	void SysTick() const;
 	void OpenFolder();
-	void OpenFile();
+	void OpenFile() const;
 	void ScrollBarHandler(int);
 };

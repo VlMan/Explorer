@@ -2,7 +2,7 @@
 
 constexpr int sys_tick_timer = 100;
 constexpr auto default_style_sheet = "border: 0px;";
-constexpr auto default_geometry = QRect(0, 0, 100, 100);
+constexpr auto default_geometry = QRect(0, 0, 100, 78);
 
 static QVector<QString> list_format_file {  // NOLINT(clang-diagnostic-exit-time-destructors)
 	".exe",
@@ -16,6 +16,7 @@ Explorer::Explorer(QWidget *parent)
 	lbl_unknown_(new QPixmap("images/unknown.png", "PNG")),
 	lbl_folder_(new QPixmap("images/folder.png", "PNG")),
 	lbl_executable_(new QPixmap("images/exe.png", "PNG")),
+	lbl_picture_png_(new QPixmap("images/picture_png.png", "PNG")),
 	current_size_item_(100),
 	current_space_item_(10),
 	current_item_count_(0),
@@ -26,6 +27,11 @@ Explorer::Explorer(QWidget *parent)
 	ui_->setupUi(this);
 	this->installEventFilter(this);
 	ui_->le_path->setText(current_directory_);
+
+	*lbl_unknown_ = lbl_unknown_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+	*lbl_folder_ = lbl_folder_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+	*lbl_executable_ = lbl_executable_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+	*lbl_picture_png_ = lbl_picture_png_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 
 	current_general_frame_size_ = &ui_->general_frame->geometry();
 	current_horizontal_allocated_space_ = 0;
@@ -60,6 +66,9 @@ Item* Explorer::AddNewItem(const QString& path, const QString& absolute_path, co
 
 	case item_type::exe:
 	{ item = new Executable(ui_->general_frame, default_geometry, path, absolute_path); item->SetPixmap(*lbl_executable_); break; }
+
+	case item_type::picture:
+	{ item = new Picture(ui_->general_frame, default_geometry, "PNG", path, absolute_path); item->SetPixmap(*lbl_picture_png_); break; }
 
 	case item_type::unknown:
 	{ item = new Item(ui_->general_frame, default_geometry, path, absolute_path); item->SetPixmap(*lbl_unknown_); break; }
@@ -136,7 +145,6 @@ void Explorer::RepaintItems()
 
 		current_vertical_allocated_space_ = ((current_count_row_item_ * current_size_item_) + (current_count_row_item_ * current_space_item_));
 		current_vertical_unallocated_space_ = current_general_frame_size_->height() - current_vertical_allocated_space_;
-		
 	}
 
 	qDebug() << "Duration repaint items =" << (static_cast<double>(clock()) - static_cast<double>(startRepaintItems)) / static_cast<double>(CLOCKS_PER_SEC) << " Count item =" << list_items_.size();
@@ -164,13 +172,7 @@ bool Explorer::eventFilter(QObject* watched, QEvent* event)
 
 	if (event->type() == QEvent::Wheel)
 	{
-		const auto wheel = dynamic_cast<QWheelEvent*>(event);
-		int step;
-
-		if (wheel->delta() < 0) step = 1;
-		else step = -1;
-
-		ui_->v_bar_general->setValue(ui_->v_bar_general->value() + step);
+		ui_->v_bar_general->setValue(ui_->v_bar_general->value() + (dynamic_cast<QWheelEvent*>(event)->delta() < 0 ? 1 : -1));
 	}
 
 	if (event->type() == QEvent::KeyPress)
@@ -206,7 +208,7 @@ bool Explorer::eventFilter(QObject* watched, QEvent* event)
 		if (std::any_of(
 			list_items_.begin(),
 			list_items_.end(),
-			[=](const Item* item) -> bool { return watched->objectName() == item->objectName(); }))
+			[=](const Item* item) -> bool { return watched == item; }))
 		{
 			if (std::none_of(
 			list_format_file.begin(),
@@ -229,17 +231,17 @@ bool Explorer::eventFilter(QObject* watched, QEvent* event)
 	return false;
 }
 
-int Explorer::GetCurrentValueVerticalBar() const
+int Explorer::GetMaximumValueVerticalBar() const
 {
 	if (current_size_item_ < (current_vertical_unallocated_space_ + current_size_item_))
 		return 0;
 
-	return (current_vertical_allocated_space_ - (current_vertical_unallocated_space_ < 0 ? 0 : current_vertical_unallocated_space_)) / current_size_item_;
+	return (current_vertical_allocated_space_ - (current_vertical_unallocated_space_ < 0 ? 0 : current_vertical_unallocated_space_)) / (current_size_item_ + current_space_item_);
 }
 
 void Explorer::SysTick() const
 {
-	ui_->v_bar_general->setMaximum(GetCurrentValueVerticalBar());
+	ui_->v_bar_general->setMaximum(GetMaximumValueVerticalBar());
 }
 
 void Explorer::OpenFolder()
@@ -272,6 +274,10 @@ void Explorer::OpenFolder()
 		if (fileName.endsWith(".exe"))
 			list_items_.append(AddNewItem(fileName, current_directory_ + "/" + fileName, item_type::exe));
 
+	for (auto& fileName : listFiles)
+		if (fileName.endsWith(".png"))
+			list_items_.append(AddNewItem(fileName, current_directory_ + "/" + fileName, item_type::picture));
+
 	qDebug() << "Duration add exe =" << (static_cast<double>(clock()) - static_cast<double>(startAddExe)) / static_cast<double>(CLOCKS_PER_SEC);
 	const auto startAddUnknown = clock();
 
@@ -285,23 +291,17 @@ void Explorer::OpenFolder()
 	qDebug() << "Duration open folder =" << (static_cast<double>(clock()) - static_cast<double>(startOpenFolder)) / static_cast<double>(CLOCKS_PER_SEC);
 }
 
-void Explorer::OpenFile()
+void Explorer::OpenFile() const
 {
 	if (current_directory_.isEmpty()) return;
-
-	const auto th = new QThread;
-	const auto pr = new QProcess;
-	connect(th, &QThread::started, pr, [=]() { pr->start(current_directory_); });
-	connect(th, &QThread::finished, pr, &QProcess::deleteLater);
-	connect(th, &QThread::finished, th, &QThread::deleteLater);
-
-	pr->moveToThread(th);
-
-	th->start();
+	if(QFile::exists(current_directory_))
+		QDesktopServices::openUrl(current_directory_);
 }
 
 void Explorer::ScrollBarHandler(const int value)
 {
+	const auto startScrollRepaint = clock();
 	RepaintItemsInStep(value - previous_scroll_bar_value_);
 	previous_scroll_bar_value_ = value;
+	qDebug() << "Duration scroll repaint =" << (static_cast<double>(clock()) - static_cast<double>(startScrollRepaint)) / static_cast<double>(CLOCKS_PER_SEC);
 }

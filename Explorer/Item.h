@@ -9,6 +9,7 @@ enum class item_type
 {
 	unknown = 0,
 	folder,
+	picture,
 	exe
 };
 
@@ -54,8 +55,7 @@ public:
 
 	void SetRect(const QRect& rect) {
 		*size_ = rect;
-		size_lbl_.reset(new QRect(this->rect()));
-		size_lbl_->setHeight(size_lbl_->height());
+		*size_lbl_ = this->rect();
 		this->setGeometry(rect);
 	}
 	NODISCARD QRect GetSize() const { return *size_; }

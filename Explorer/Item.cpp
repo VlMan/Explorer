@@ -2,12 +2,7 @@
 
 void Item::SetPixmap(const QPixmap& pix)
 {
-	QPixmap pixTmp = pix;
-	if (pixTmp.isNull())
-		pixTmp = QPixmap("images/unknown.png", "PNG");
-
-	pixTmp = pixTmp.scaled(SizeLabel().size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-	this->setPixmap(pixTmp);
+	this->setPixmap(pix);
 }
 
 void Item::Show()
@@ -22,9 +17,10 @@ void Item::setPixmap(const QPixmap& pix)
 
 	lbl_->setPixmap(pix);
 
-	lbl_path_->setGeometry(10, 80, this->size().width(), 15);
+	lbl_path_->setGeometry(0, 80, this->size().width(), 15);
+	lbl_path_->setAlignment(Qt::AlignCenter);
 	lbl_path_->setText(path_);
 	
-	//this->setLayout(layout_.data());
+	//this->setLayout(layout_.data()); // TODO: create layout
 	lbl_->setGeometry(SizeLabel());
 }
