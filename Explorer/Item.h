@@ -54,9 +54,10 @@ public:
 	virtual void Show();
 
 	void SetRect(const QRect& rect) {
-		*size_ = rect;
-		*size_lbl_ = this->rect();
+		if (this->geometry() == rect) return;
 		this->setGeometry(rect);
+		*size_lbl_ = this->rect();
+		*size_ = rect;
 	}
 	NODISCARD QRect GetSize() const { return *size_; }
 protected:

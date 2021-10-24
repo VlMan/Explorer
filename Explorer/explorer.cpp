@@ -13,6 +13,7 @@ Explorer::Explorer(QWidget *parent)
 	: QMainWindow(parent),
 	current_directory_("C:/"),
 	previous_directory_("."),
+	t_sys_tick_(new QTimer(this)),
 	lbl_unknown_(new QPixmap("images/unknown.png", "PNG")),
 	lbl_folder_(new QPixmap("images/folder.png", "PNG")),
 	lbl_executable_(new QPixmap("images/exe.png", "PNG")),
@@ -43,11 +44,10 @@ Explorer::Explorer(QWidget *parent)
 	current_vertical_allocated_space_ = 0;
 	current_vertical_unallocated_space_ = current_general_frame_size_->height();
 
-	t_sys_tick_ = new QTimer(this);
 	t_sys_tick_->start(sys_tick_timer);
 
 	connect(ui_->v_bar_general, &QScrollBar::valueChanged, this, &Explorer::ScrollBarHandler);
-	connect(t_sys_tick_, &QTimer::timeout, this, &Explorer::SysTick);
+	connect(t_sys_tick_.data(), &QTimer::timeout, this, &Explorer::SysTick);
 	connect(ui_->le_path, &QLineEdit::textChanged, this, [&](const QString& path) -> void
 	{
 		if (path.isEmpty()) return;
@@ -116,7 +116,7 @@ QRect Explorer::FindOptimizeNextPosition()
 
 	if (current_horizontal_unallocated_space_ > current_size_item_ + current_space_item_ * 2) // if there is free space for item
 	{
-		const int lastItemCount = in_row_count_item_.value(current_count_row_item_);
+		const int &lastItemCount = in_row_count_item_.value(current_count_row_item_);
 		in_row_count_item_.remove(current_count_row_item_);
 		in_row_count_item_.insert(current_count_row_item_, lastItemCount + 1);
 

@@ -14,10 +14,10 @@
 #include "ui_explorer.h"
 
 class Executable;
-class Folder;
+class Folder; 
 class Item;
 
-constexpr auto program_version = "v0.1.2210.5";
+constexpr auto program_version = "v0.1.2410.1";
 
 class Explorer final : public QMainWindow
 {
@@ -27,7 +27,7 @@ class Explorer final : public QMainWindow
 	QString current_directory_;
 	QString previous_directory_;
 
-	QTimer* t_sys_tick_;
+	QScopedPointer<QTimer> t_sys_tick_;
 	QRect const *current_general_frame_size_; // ref to size general frame
 	QMap<int, int> in_row_count_item_; // count item from current row
 
