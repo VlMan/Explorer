@@ -60,6 +60,8 @@ public:
 		*size_ = rect;
 	}
 	NODISCARD QRect GetSize() const { return *size_; }
+	NODISCARD QString GetFormatFile() const { return path_.mid(path_.lastIndexOf('.')); }
+
 protected:
 	void setPixmap(const QPixmap& pix);
 	NODISCARD QRect SizeLabel() const { return *size_lbl_; }

@@ -9,7 +9,7 @@ class Folder final : public Item
 public:
 	explicit Folder(QWidget* w, const QRect rect, QString path = "", QString absolute_path = "")
 		: Item(w, rect, std::move(path), std::move(absolute_path)) { }
-	~Folder() override { Q_UNUSED(new bool) }
+	~Folder() override { }
 
 	void SetPixmap(const QPixmap& pix = QPixmap()) override;
 	void Show() override;

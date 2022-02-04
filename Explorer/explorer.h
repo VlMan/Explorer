@@ -17,7 +17,7 @@ class Executable;
 class Folder; 
 class Item;
 
-constexpr auto program_version = "v0.1.2410.1";
+constexpr auto program_version = "v0.1.050222.3";
 
 class Explorer final : public QMainWindow
 {

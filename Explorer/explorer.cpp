@@ -14,10 +14,10 @@ Explorer::Explorer(QWidget *parent)
 	current_directory_("C:/"),
 	previous_directory_("."),
 	t_sys_tick_(new QTimer(this)),
-	lbl_unknown_(new QPixmap("images/unknown.png", "PNG")),
-	lbl_folder_(new QPixmap("images/folder.png", "PNG")),
-	lbl_executable_(new QPixmap("images/exe.png", "PNG")),
-	lbl_picture_png_(new QPixmap("images/picture_png.png", "PNG")),
+	lbl_unknown_(new QPixmap(":/Explorer/unknown.png", "PNG")),
+	lbl_folder_(new QPixmap(":/Explorer/folder.png", "PNG")),
+	lbl_executable_(new QPixmap(":/Explorer/exe.png", "PNG")),
+	lbl_picture_png_(new QPixmap(":/Explorer/picture_png.png", "PNG")),
 	current_size_item_(100),
 	current_space_item_(6),
 	current_item_count_(0),
@@ -61,7 +61,7 @@ Explorer::Explorer(QWidget *parent)
 
 Item* Explorer::AddNewItem(const QString& path, const QString& absolute_path, const item_type type)
 {
-	Item* item = nullptr;
+	Item* item = nullptr; // not safe
 	switch(type)
 	{
 	case item_type::folder:
@@ -97,11 +97,11 @@ Item* Explorer::AddNewItem(const QString& path, const QString& absolute_path, co
 	item->setStyleSheet(default_style_sheet);
 	item->installEventFilter(this);
 	
-	item->show();
+	//item->show();
 	return item;
 }
 
-QRect Explorer::FindOptimizeNextPosition()
+QRect Explorer::FindOptimizeNextPosition() // this is not clear function
 {
 	if (current_item_count_ <= 0) // default position
 	{
@@ -152,7 +152,8 @@ void Explorer::RepaintItems()
 	for (const auto item : list_items_)
 	{
 		item->SetRect(FindOptimizeNextPosition());
-
+		if (item->isHidden())
+			item->show();
 		current_item_count_++;
 		current_horizontal_allocated_space_ = in_row_count_item_.value(current_count_row_item_) * current_size_item_ + in_row_count_item_.value(current_count_row_item_) * current_space_item_;
 		current_horizontal_unallocated_space_ = current_general_frame_size_->width() - current_horizontal_allocated_space_;
@@ -203,7 +204,9 @@ bool Explorer::eventFilter(QObject* watched, QEvent* event)
 				list_items_.begin(),
 				list_items_.end(),
 				[=](const Item* item) -> bool { return watched == item; }))
-			ui_->le_path->setText(qobject_cast<Item*>(watched)->objectName());
+			{
+				ui_->le_path->setText(qobject_cast<Item*>(watched)->objectName());
+			}
 		}
 		return true;
 	}
@@ -321,23 +324,21 @@ void Explorer::OpenFolder()
 		list_items_.append(AddNewItem(folderName, current_directory_ + "/" + folderName, item_type::folder));
 
 	qDebug() << "Duration add folders =" << (static_cast<double>(clock()) - static_cast<double>(startAddFolders)) / static_cast<double>(CLOCKS_PER_SEC);
-	const auto startAddExe = clock();
+	const auto startAddfiles = clock();
 
 	for (auto& fileName : listFiles)
-		if (fileName.endsWith(".exe"))
+	{
+		const auto file_format = fileName.mid(fileName.lastIndexOf('.'));
+
+		if (file_format == ".exe")
 			list_items_.append(AddNewItem(fileName, current_directory_ + "/" + fileName, item_type::exe));
-
-	for (auto& fileName : listFiles)
-		if (fileName.endsWith(".png"))
+		else if (file_format == ".png")
 			list_items_.append(AddNewItem(fileName, current_directory_ + "/" + fileName, item_type::picture));
-
-	qDebug() << "Duration add exe =" << (static_cast<double>(clock()) - static_cast<double>(startAddExe)) / static_cast<double>(CLOCKS_PER_SEC);
-	const auto startAddUnknown = clock();
-
-	for (auto& fileName : listFiles)
-		if (std::none_of(list_format_file.begin(), list_format_file.end(), [=](const QString& format) -> bool { return fileName.endsWith(format); }))
+		else if (!list_format_file.contains(file_format))
 			list_items_.append(AddNewItem(fileName, current_directory_ + "/" + fileName, item_type::unknown));
-	qDebug() << "Duration add unknown =" << (static_cast<double>(clock()) - static_cast<double>(startAddUnknown)) / static_cast<double>(CLOCKS_PER_SEC);
+	}
+	
+	qDebug() << "Duration add files =" << (static_cast<double>(clock()) - static_cast<double>(startAddfiles)) / static_cast<double>(CLOCKS_PER_SEC);
 
 	ui_->v_bar_general->setValue(0);
 	RepaintItems();

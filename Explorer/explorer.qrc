@@ -1,4 +1,8 @@
 <RCC>
-    <qresource prefix="Explorer">
+    <qresource prefix="/Explorer">
+        <file alias="exe.png">images/exe.png</file>
+        <file alias="folder.png">images/folder.png</file>
+        <file alias="picture_png.png">images/picture_png.png</file>
+        <file alias="unknown.png">images/unknown.png</file>
     </qresource>
 </RCC>
