@@ -7,12 +7,18 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Explorer", "Explorer\Explor
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7782F457-1E93-4432-A99F-FAC52BB2B47A}.Debug|x64.ActiveCfg = Debug|x64
+		{7782F457-1E93-4432-A99F-FAC52BB2B47A}.Debug|x64.Build.0 = Debug|x64
 		{7782F457-1E93-4432-A99F-FAC52BB2B47A}.Debug|x86.ActiveCfg = Debug|Win32
 		{7782F457-1E93-4432-A99F-FAC52BB2B47A}.Debug|x86.Build.0 = Debug|Win32
+		{7782F457-1E93-4432-A99F-FAC52BB2B47A}.Release|x64.ActiveCfg = Release|x64
+		{7782F457-1E93-4432-A99F-FAC52BB2B47A}.Release|x64.Build.0 = Release|x64
 		{7782F457-1E93-4432-A99F-FAC52BB2B47A}.Release|x86.ActiveCfg = Release|Win32
 		{7782F457-1E93-4432-A99F-FAC52BB2B47A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
@@ -20,6 +26,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
+		Qt5Version = 5.10.1_msvc2015
 		SolutionGuid = {C5410E42-DBF5-44C3-99EF-14F523B0E693}
 	EndGlobalSection
 EndGlobal

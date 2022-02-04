@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1044</width>
-    <height>718</height>
+    <width>870</width>
+    <height>741</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -44,6 +44,12 @@
          <property name="styleSheet">
           <string notr="true">border: 1px solid; border-radius: 0px;</string>
          </property>
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Plain</enum>
+         </property>
         </widget>
        </item>
        <item row="1" column="2">
@@ -76,13 +82,7 @@
          <property name="frameShadow">
           <enum>QFrame::Raised</enum>
          </property>
-         <layout class="QFormLayout" name="formLayout">
-          <property name="horizontalSpacing">
-           <number>9</number>
-          </property>
-          <property name="verticalSpacing">
-           <number>9</number>
-          </property>
+         <layout class="QHBoxLayout" name="horizontalLayout">
           <property name="leftMargin">
            <number>2</number>
           </property>
@@ -95,11 +95,11 @@
           <property name="bottomMargin">
            <number>2</number>
           </property>
-          <item row="0" column="0" colspan="2">
+          <item>
            <widget class="QLineEdit" name="le_path">
             <property name="minimumSize">
              <size>
-              <width>0</width>
+              <width>300</width>
               <height>25</height>
              </size>
             </property>
@@ -108,6 +108,49 @@
               <width>16777215</width>
               <height>25</height>
              </size>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btn_back">
+            <property name="minimumSize">
+             <size>
+              <width>60</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>60</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>13</pointsize>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton#btn_back:!hover:!pressed
+{
+background-color: rgb(255, 215, 133);
+}
+QPushButton#btn_back:hover:!pressed
+{
+background-color: rgb(203, 135, 0);
+}
+QPushButton#btn_back:hover:pressed
+{
+background-color: rgb(255, 215, 133);
+}</string>
+            </property>
+            <property name="text">
+             <string>Back</string>
             </property>
            </widget>
           </item>
@@ -124,7 +167,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1044</width>
+     <width>870</width>
      <height>21</height>
     </rect>
    </property>

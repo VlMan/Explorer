@@ -54,6 +54,7 @@ Explorer::Explorer(QWidget *parent)
 		
 		current_directory_ = path;
 	});
+	connect(ui_->btn_back, &QPushButton::clicked, this, [=]() { GoBack(); });
 	this->show();
 
 	OpenFolder();
