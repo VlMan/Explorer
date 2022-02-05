@@ -58,6 +58,9 @@
     <ClCompile Include="Picture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Music.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ClicableLabel.h">
@@ -76,6 +79,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="Picture.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="Music.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

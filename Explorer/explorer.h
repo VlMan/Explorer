@@ -11,13 +11,10 @@
 #include "Executable.h"
 #include "Folder.h"
 #include "Picture.h"
+#include "Music.h"
 #include "ui_explorer.h"
 
-class Executable;
-class Folder; 
-class Item;
-
-constexpr auto program_version = "v0.1.050222.4";
+constexpr auto program_version = "v0.1.050222.5";
 
 class Explorer final : public QMainWindow
 {
@@ -34,6 +31,7 @@ class Explorer final : public QMainWindow
 	QScopedPointer<QPixmap> lbl_unknown_;
 	QScopedPointer<QPixmap> lbl_folder_;
 	QScopedPointer<QPixmap> lbl_executable_;
+	QScopedPointer<QPixmap> lbl_music_;
 	QScopedPointer<QPixmap> lbl_picture_png_;
 
 	int current_size_item_;

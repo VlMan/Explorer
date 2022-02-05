@@ -10,6 +10,7 @@ enum class item_type
 	unknown = 0,
 	folder,
 	picture,
+	music,
 	exe
 };
 

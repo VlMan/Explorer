@@ -6,6 +6,7 @@ auto default_geometry = QRect();
 
 static QVector<QString> list_format_file {  // NOLINT(clang-diagnostic-exit-time-destructors)
 	".exe",
+	".mp3",
 	".png"
 };
 
@@ -17,6 +18,7 @@ Explorer::Explorer(QWidget *parent)
 	lbl_unknown_(new QPixmap(":/Explorer/unknown.png", "PNG")),
 	lbl_folder_(new QPixmap(":/Explorer/folder.png", "PNG")),
 	lbl_executable_(new QPixmap(":/Explorer/exe.png", "PNG")),
+	lbl_music_(new QPixmap(":/Explorer/music.png", "PNG")),
 	lbl_picture_png_(new QPixmap(":/Explorer/picture_png.png", "PNG")),
 	current_size_item_(100),
 	current_space_item_(6),
@@ -34,6 +36,7 @@ Explorer::Explorer(QWidget *parent)
 	*lbl_unknown_ = lbl_unknown_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 	*lbl_folder_ = lbl_folder_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 	*lbl_executable_ = lbl_executable_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+	*lbl_music_ = lbl_music_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 	*lbl_picture_png_ = lbl_picture_png_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 
 	current_general_frame_size_ = &ui_->general_frame->geometry(); // give ref to general frame geometry
@@ -83,6 +86,13 @@ Item* Explorer::AddNewItem(const QString& path, const QString& absolute_path, co
 	{
 		item = new Picture(ui_->general_frame, default_geometry, "PNG", path, absolute_path);
 		item->SetPixmap();
+		break;
+	}
+
+	case item_type::music:
+	{
+		item = new Music(ui_->general_frame, default_geometry, path, absolute_path);
+		item->SetPixmap(*lbl_music_);
 		break;
 	}
 
@@ -335,6 +345,8 @@ void Explorer::OpenFolder()
 			list_items_.append(AddNewItem(fileName, current_directory_ + "/" + fileName, item_type::exe));
 		else if (file_format == ".png")
 			list_items_.append(AddNewItem(fileName, current_directory_ + "/" + fileName, item_type::picture));
+		else if (file_format == ".mp3")
+			list_items_.append(AddNewItem(fileName, current_directory_ + "/" + fileName, item_type::music));
 		else if (!list_format_file.contains(file_format))
 			list_items_.append(AddNewItem(fileName, current_directory_ + "/" + fileName, item_type::unknown));
 	}

@@ -4,5 +4,6 @@
         <file alias="folder.png">images/folder.png</file>
         <file alias="picture_png.png">images/picture_png.png</file>
         <file alias="unknown.png">images/unknown.png</file>
+        <file alias="music.png">images/music.png</file>
     </qresource>
 </RCC>
