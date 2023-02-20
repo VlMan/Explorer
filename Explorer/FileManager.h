@@ -40,6 +40,10 @@ public:
         return dir.exists() && dir.isReadable() && dir.isAbsolute() && dir.isRoot() == false;
     }
 
+    static QString getPath(const QString& path) {
+        return QFileInfo(path).fileName();
+    }
+
     static QDateTime getFileLastModified(const QString& path) {
         QFile file(path);
         if (file.exists()) {
@@ -91,33 +95,37 @@ public:
         return dir.mkpath(".");
     }
 
-    //static bool copy(const QString& source, const QString& destination) {
-    //    QFile file(source);
-    //    QDir dir(source);
-    //    if (file.exists()) {
-    //        return file.copy(destination);
-    //    }
-    //    else if (dir.exists()) {
-    //        return dir.mkpath(destination) && QDir(destination).removeRecursively() && QDir(source).rename(destination);
-    //    }
-    //    else {
-    //        return false;
-    //    }
-    //}
+    static bool copy(const QString& source, const QString& destination) {
+        QFile file(source);
+        QDir dir(source);
+        if (file.exists()) {
+            return file.copy(destination);
+        }
+        else if (dir.exists()) {
+            return dir.mkpath(destination) && QDir(destination).removeRecursively() && QDir(source).rename(source, destination);
+        }
+        else {
+            return false;
+        }
+    }
 
-    //static bool move(const QString& source, const QString& destination) {
-    //    QFile file(source);
-    //    QDir dir(source);
-    //    if (file.exists()) {
-    //        return file.rename(destination);
-    //    }
-    //    else if (dir.exists()) {
-    //        return QDir(source).rename(destination);
-    //    }
-    //    else {
-    //        return false;
-    //    }
-    //}
+    static bool move(const QString& source, const QString& destination) {
+        QFile file(source);
+        QDir dir(source);
+        if (file.exists()) {
+            return file.rename(destination);
+        }
+        else if (dir.exists()) {
+            return QDir(source).rename(source, destination);
+        }
+        else {
+            return false;
+        }
+    }
+
+    static bool isFileExists(const QString& path) {
+        return QFile::exists(path);
+    }
 
     static QStringList getDirectoryContentsByExtension(const QString& path, const QString& extension) {
         QDir dir(path);

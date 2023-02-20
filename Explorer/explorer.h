@@ -21,6 +21,7 @@ class Explorer final : public QMainWindow
 	Q_OBJECT
 
 	QVector<Item*> list_items_;
+	QVector<QString> list_format_file;
 	QString current_directory_;
 	QString previous_directory_;
 
@@ -56,10 +57,12 @@ public:
 private:
 	QScopedPointer<Ui::ExplorerClass> ui_;
 
-	Item* AddNewItem(const QString& path, const QString& absolute_path, item_type type = item_type::folder);
-
 	NODISCARD QRect FindOptimizeNextPosition();
 	void RepaintItems();
+	int GetCurrentVerticalAllocatedSpace();
+	int GetCurrentHorizontalAllocatedSpace();
+	int GetCurrentVerticalUnallocatedSpace();
+	int GetCurrentHorizontalUnallocatedSpace();
 	void RepaintItemsInStep(const int step);
 
 	bool eventFilter(QObject* watched, QEvent* event) override;
@@ -72,6 +75,7 @@ private:
 private slots:
 	void SysTick() const;
 	void OpenFolder();
+	NODISCARD item_type GetItemTypeByPath(const QString& absolute_path) const;
 	void OpenFile() const;
 	void ScrollBarHandler(int);
 };

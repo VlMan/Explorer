@@ -59,10 +59,9 @@ public:
 	}
 	NODISCARD QRect GetSize() const { return *size_; }
 	NODISCARD QString GetFormatFile() const { return path_.mid(path_.lastIndexOf('.')); }
+	NODISCARD QString GetAbsolutePath() const { return absolute_path_; }
 
 protected:
 	void setPixmap(const QPixmap& pix);
 	NODISCARD QRect SizeLabel() const { return *size_lbl_; }
-
-	NODISCARD QString GetAbsolutePath() const { return absolute_path_; }
 };
