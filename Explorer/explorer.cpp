@@ -1,5 +1,7 @@
 #include "explorer.h"
 
+#include "FileManager.h"
+
 constexpr int sys_tick_timer = 100;
 constexpr auto default_style_sheet = "border: 0px;";
 auto default_geometry = QRect();
@@ -15,11 +17,6 @@ Explorer::Explorer(QWidget *parent)
 	current_directory_("C:/"),
 	previous_directory_("."),
 	t_sys_tick_(new QTimer(this)),
-	lbl_unknown_(new QPixmap(":/Explorer/unknown.png", "PNG")),
-	lbl_folder_(new QPixmap(":/Explorer/folder.png", "PNG")),
-	lbl_executable_(new QPixmap(":/Explorer/exe.png", "PNG")),
-	lbl_music_(new QPixmap(":/Explorer/music.png", "PNG")),
-	lbl_picture_png_(new QPixmap(":/Explorer/picture_png.png", "PNG")),
 	current_size_item_(100),
 	current_space_item_(6),
 	current_item_count_(0),
@@ -32,12 +29,6 @@ Explorer::Explorer(QWidget *parent)
 	ui_->le_path->setText(current_directory_);
 
 	default_geometry = QRect(0, 0, current_size_item_, current_size_item_ - 22);
-
-	*lbl_unknown_ = lbl_unknown_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-	*lbl_folder_ = lbl_folder_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-	*lbl_executable_ = lbl_executable_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-	*lbl_music_ = lbl_music_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-	*lbl_picture_png_ = lbl_picture_png_->scaled(default_geometry.size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 
 	current_general_frame_size_ = &ui_->general_frame->geometry(); // give ref to general frame geometry
 
@@ -65,50 +56,27 @@ Explorer::Explorer(QWidget *parent)
 
 Item* Explorer::AddNewItem(const QString& path, const QString& absolute_path, const item_type type)
 {
-	Item* item = nullptr; // not safe
-	switch(type)
-	{
-	case item_type::folder:
-	{
-		item = new Folder(ui_->general_frame, default_geometry, path, absolute_path);
-		item->SetPixmap(*lbl_folder_);
-		break;
+	Item* item = nullptr;
+	static const std::unordered_map<item_type, std::function<Item* (const QString&, const QString&)>> item_factory = {
+		{item_type::folder, [=](const QString& path, const QString& absolute_path) {return new Folder(ui_->general_frame, default_geometry, path, absolute_path); }},
+		{item_type::exe, [=](const QString& path, const QString& absolute_path) {return new Executable(ui_->general_frame, default_geometry, path, absolute_path); }},
+		{item_type::picture, [=](const QString& path, const QString& absolute_path) {return new Picture(ui_->general_frame, default_geometry, "PNG", path, absolute_path); }},
+		{item_type::music, [=](const QString& path, const QString& absolute_path) {return new Music(ui_->general_frame, default_geometry, path, absolute_path); }},
+		{item_type::unknown, [=](const QString& path, const QString& absolute_path) {return new Item(ui_->general_frame, default_geometry, path, absolute_path); }},
+	};
+
+	auto it = item_factory.find(type);
+	if (it != item_factory.end()) {
+		item = it->second(path, absolute_path);
 	}
 
-	case item_type::exe:
-	{
-		item = new Executable(ui_->general_frame, default_geometry, path, absolute_path);
-		item->SetPixmap(*lbl_executable_);
-		break;
+	if (item) {
+		item->SetPixmap(FileManager::getIcon(absolute_path, default_geometry));
+		item->SetType(type);
+		item->setObjectName(absolute_path);
+		item->setStyleSheet(default_style_sheet);
+		item->installEventFilter(this);
 	}
-
-	case item_type::picture:
-	{
-		item = new Picture(ui_->general_frame, default_geometry, "PNG", path, absolute_path);
-		item->SetPixmap();
-		break;
-	}
-
-	case item_type::music:
-	{
-		item = new Music(ui_->general_frame, default_geometry, path, absolute_path);
-		item->SetPixmap(*lbl_music_);
-		break;
-	}
-
-	case item_type::unknown:
-	{
-		item = new Item(ui_->general_frame, default_geometry, path, absolute_path);
-		item->SetPixmap(*lbl_unknown_);
-		break;
-	}
-	}
-	item->SetType(type);
-	item->setObjectName(absolute_path);
-	item->setStyleSheet(default_style_sheet);
-	item->installEventFilter(this);
-	
-	//item->show();
 	return item;
 }
 
@@ -326,30 +294,39 @@ void Explorer::OpenFolder()
 		delete item;
 	}
 	list_items_.clear();
-	const auto listFolders = dir.entryList(QDir::Dirs);
+	//const auto listFolders = dir.entryList(QDir::Dirs);
 	const auto listFiles = dir.entryList(QDir::Files);
 
 	const auto startAddFolders = clock();
 
-	for (auto& folderName : listFolders)
-		list_items_.append(AddNewItem(folderName, current_directory_ + "/" + folderName, item_type::folder));
+	const auto& contents = FileManager::getDirectoryContents(current_directory_);
+	for (const auto& content : contents)
+	{
+		const auto& absolute_path = current_directory_ + "/" + content;
+		if (FileManager::isDirectory(absolute_path))
+		{
+			list_items_.append(AddNewItem(content, absolute_path, item_type::folder));
+		}
+		else if (FileManager::isExecutable(absolute_path))
+		{
+			list_items_.append(AddNewItem(content, absolute_path, item_type::exe));
+		}
+		else if (FileManager::isImage(absolute_path))
+		{
+			list_items_.append(AddNewItem(content, absolute_path, item_type::picture));
+		}
+		else if (FileManager::isMusic(absolute_path))
+		{
+			list_items_.append(AddNewItem(content, absolute_path, item_type::music));
+		}
+		else if ((!list_format_file.contains(FileManager::getFormatFile(absolute_path))))
+		{
+			list_items_.append(AddNewItem(content, absolute_path, item_type::unknown));
+		}
+	}
 
 	qDebug() << "Duration add folders =" << (static_cast<double>(clock()) - static_cast<double>(startAddFolders)) / static_cast<double>(CLOCKS_PER_SEC);
 	const auto startAddfiles = clock();
-
-	for (auto& fileName : listFiles)
-	{
-		const auto file_format = fileName.mid(fileName.lastIndexOf('.'));
-
-		if (file_format == ".exe")
-			list_items_.append(AddNewItem(fileName, current_directory_ + "/" + fileName, item_type::exe));
-		else if (file_format == ".png")
-			list_items_.append(AddNewItem(fileName, current_directory_ + "/" + fileName, item_type::picture));
-		else if (file_format == ".mp3")
-			list_items_.append(AddNewItem(fileName, current_directory_ + "/" + fileName, item_type::music));
-		else if (!list_format_file.contains(file_format))
-			list_items_.append(AddNewItem(fileName, current_directory_ + "/" + fileName, item_type::unknown));
-	}
 	
 	qDebug() << "Duration add files =" << (static_cast<double>(clock()) - static_cast<double>(startAddfiles)) / static_cast<double>(CLOCKS_PER_SEC);
 
@@ -360,9 +337,7 @@ void Explorer::OpenFolder()
 
 void Explorer::OpenFile() const
 {
-	if (current_directory_.isEmpty()) return;
-	if(QFile::exists(current_directory_))
-		QDesktopServices::openUrl(current_directory_);
+	FileManager::openFile(current_directory_);
 }
 
 void Explorer::ScrollBarHandler(const int value)

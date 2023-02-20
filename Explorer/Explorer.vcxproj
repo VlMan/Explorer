@@ -51,7 +51,7 @@
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="QtSettings">
-    <QtInstall>5.10.1_msvc2015</QtInstall>
+    <QtInstall>msvc2019_64</QtInstall>
     <QtModules>core;gui;multimedia;widgets;location</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
@@ -61,7 +61,7 @@
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="QtSettings">
-    <QtInstall>5.10.1_msvc2015</QtInstall>
+    <QtInstall>msvc2019_64</QtInstall>
     <QtModules>core;gui;multimedia;widgets;location</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
@@ -89,7 +89,10 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|Win32'">
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|Win32'">
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -221,6 +224,9 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="Music.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="FileManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

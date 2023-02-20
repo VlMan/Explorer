@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include <QGridLayout>
 #include <QDebug>
 #include "ClicableLabel.h"
 #include "ClicableWidget.h"
@@ -25,7 +24,6 @@ class Item : public ClicableWidget
 	QScopedPointer<QLabel> lbl_path_;
 	QScopedPointer<QRect> size_;
 	QScopedPointer<QRect> size_lbl_;
-	QScopedPointer<QGridLayout> layout_;
 
 	item_type type_;
 
@@ -41,7 +39,6 @@ public:
 	lbl_path_(new QLabel(this)),
 	size_(new QRect(rect)),
 	size_lbl_(new QRect(rect)),
-	layout_(new QGridLayout(this)),
 	type_(item_type::unknown),
 	path_(std::move(path)),
 	absolute_path_(std::move(absolute_path)) { }

@@ -85,4 +85,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="FileManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>
