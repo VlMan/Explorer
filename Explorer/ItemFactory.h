@@ -29,7 +29,7 @@ public:
 
 private:
     using ItemCreator = std::function<Item* (const QString&, const QString&, QWidget*, const QRect&)>;
-    using FactoryMap = std::unordered_map<item_type, ItemCreator>;
+    using FactoryMap = std::map<item_type, ItemCreator>;
 
     FactoryMap factories_{
         {item_type::folder, [](const QString& path, const QString& absolute_path, QWidget* parent, const QRect& geometry) { return new Folder(parent, geometry, path, absolute_path); }},

@@ -15,6 +15,15 @@ enum class item_type
 
 #define NODISCARD [[nodiscard]]  // NOLINT(cppcoreguidelines-macro-usage)
 
+static QVector<QString> GetAllFormatFiles() {
+	static QVector<QString> list_format_file = {
+	".exe",
+	".mp3",
+	".png"
+	};
+	return list_format_file;
+}
+
 class Item : public ClicableWidget
 {
 	Q_OBJECT
@@ -60,6 +69,8 @@ public:
 	NODISCARD QRect GetSize() const { return *size_; }
 	NODISCARD QString GetFormatFile() const { return path_.mid(path_.lastIndexOf('.')); }
 	NODISCARD QString GetAbsolutePath() const { return absolute_path_; }
+
+	static item_type GetItemTypeByPath(const QString& absolute_path);
 
 protected:
 	void setPixmap(const QPixmap& pix);

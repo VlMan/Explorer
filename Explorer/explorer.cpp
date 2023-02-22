@@ -1,6 +1,8 @@
 #include "explorer.h"
 
 #include "ItemCreator.h"
+#include "AlgorithmWrapper.h"
+#include "Logger.h"
 
 constexpr int sys_tick_timer = 100;
 constexpr auto default_style_sheet = "border: 0px;";
@@ -19,14 +21,9 @@ Explorer::Explorer(QWidget *parent)
 	ui_(new Ui::ExplorerClass)
 {
 	ui_->setupUi(this);
+	
 	this->installEventFilter(this);
 	ui_->le_path->setText(current_directory_);
-
-	list_format_file = {
-	".exe",
-	".mp3",
-	".png"
-	};
 
 	default_geometry = QRect(0, 0, current_size_item_, current_size_item_ - 22);
 
@@ -116,25 +113,30 @@ void Explorer::RepaintItems()
 		current_vertical_unallocated_space_ = GetCurrentVerticalUnallocatedSpace();
 	}
 
+	for (auto it = in_row_count_item_.begin(); it != in_row_count_item_.end(); ++it) {
+		int first = it.key();
+		int second = it.value();
+		qDebug() << first << second;
+	}
 	qDebug() << "Duration repaint items =" << (static_cast<double>(clock()) - static_cast<double>(startRepaintItems)) / static_cast<double>(CLOCKS_PER_SEC) << " Count item =" << list_items_.size();
 }
 
-int Explorer::GetCurrentVerticalAllocatedSpace()
+int Explorer::GetCurrentVerticalAllocatedSpace() const
 {
 	return current_count_row_item_ * current_size_item_ + current_count_row_item_ * current_space_item_;
 }
 
-int Explorer::GetCurrentHorizontalAllocatedSpace()
+int Explorer::GetCurrentHorizontalAllocatedSpace() const
 {
 	return in_row_count_item_.value(current_count_row_item_) * current_size_item_ + in_row_count_item_.value(current_count_row_item_) * current_space_item_;
 }
 
-int Explorer::GetCurrentVerticalUnallocatedSpace()
+int Explorer::GetCurrentVerticalUnallocatedSpace() const
 {
 	return current_general_frame_size_->height() - current_vertical_allocated_space_;
 }
 
-int Explorer::GetCurrentHorizontalUnallocatedSpace()
+int Explorer::GetCurrentHorizontalUnallocatedSpace() const
 {
 	return current_general_frame_size_->width() - current_horizontal_allocated_space_;
 }
@@ -174,10 +176,7 @@ bool Explorer::eventFilter(QObject* watched, QEvent* event)
 		}
 		else if (dynamic_cast<QMouseEvent*>(event)->button() == Qt::LeftButton)
 		{
-			if (std::any_of(
-				list_items_.begin(),
-				list_items_.end(),
-				[=](const Item* item) -> bool { return watched == item; }))
+			if (list_items_.contains(qobject_cast<Item*>(watched)))
 			{
 				ui_->le_path->setText(qobject_cast<Item*>(watched)->GetAbsolutePath());
 			}
@@ -187,12 +186,11 @@ bool Explorer::eventFilter(QObject* watched, QEvent* event)
 
 	if (event->type() == QEvent::KeyPress)
 	{
-		if (const auto key = dynamic_cast<QKeyEvent*>(event)->key(); key == Qt::Key_Enter || key == Qt::Key_Return)
+		const auto key = dynamic_cast<QKeyEvent*>(event)->key();
+		if (!key) return true;
+		if (key == Qt::Key_Enter || key == Qt::Key_Return)
 		{
-			if (std::none_of(
-				list_format_file.begin(),
-				list_format_file.end(),
-				[=](const QString& format) -> bool { return current_directory_.endsWith(format); }))
+			if (!GetAllFormatFiles().contains(FileManager::getFormatFile(current_directory_)))
 			{
 				OpenFolder();
 			}
@@ -219,15 +217,9 @@ bool Explorer::eventFilter(QObject* watched, QEvent* event)
 		qDebug() << "Double click";
 		const auto start = clock();
 
-		if (std::any_of(
-			list_items_.begin(),
-			list_items_.end(),
-			[=](const Item* item) -> bool { return watched == item; }))
+		if (list_items_.contains(qobject_cast<Item*>(watched)))
 		{
-			if (std::none_of(
-			list_format_file.begin(),
-			list_format_file.end(),
-			[=](const QString& format) -> bool { return watched->objectName().endsWith(format); }))
+			if (!GetAllFormatFiles().contains(FileManager::getFormatFile(current_directory_)))
 			{
 				OpenFolder();
 			}
@@ -263,12 +255,11 @@ void Explorer::Update()
 
 void Explorer::GoBack()
 {
-	if (current_directory_.isEmpty() || !FileManager::isFileExists(current_directory_))
+	if (current_directory_.isEmpty() 
+		|| FileManager::getSystemDrives().contains(current_directory_)
+		|| !FileManager::isDirectory(current_directory_)
+		|| !FileManager::isDirExists(current_directory_)) {
 		return;
-	if (std::any_of(FileManager::getSystemDrives().cbegin(),
-		FileManager::getSystemDrives().cend(),
-		[&](const QString& driver) { return current_directory_ == driver; })) {
-		return; // Ќапиши класс, который будет работать с std::any_of, std::none_of, std::find_if, std::all_of
 	}
 	ui_->le_path->setText(ui_->le_path->text().left(ui_->le_path->text().lastIndexOf("/")));
 	OpenFolder();
@@ -301,7 +292,7 @@ void Explorer::OpenFolder()
 	for (const auto& content : contents)
 	{
 		const auto& absolute_path = current_directory_ + "/" + content;
-		const auto& type = GetItemTypeByPath(absolute_path);
+		const auto& type = Item::GetItemTypeByPath(absolute_path);
 
 		try {
 			auto item = ItemCreator::CreateItem(
@@ -329,32 +320,6 @@ void Explorer::OpenFolder()
 	ui_->v_bar_general->setValue(0);
 	RepaintItems();
 	qDebug() << "Duration open folder =" << (static_cast<double>(clock()) - static_cast<double>(startOpenFolder)) / static_cast<double>(CLOCKS_PER_SEC);
-}
-
-item_type Explorer::GetItemTypeByPath(const QString& absolute_path) const
-{
-	item_type type = item_type::unknown;
-	if (FileManager::isDirectory(absolute_path))
-	{
-		type = item_type::folder;
-	}
-	else if (FileManager::isExecutable(absolute_path))
-	{
-		type = item_type::exe;
-	}
-	else if (FileManager::isImage(absolute_path))
-	{
-		type = item_type::picture;
-	}
-	else if (FileManager::isMusic(absolute_path))
-	{
-		type = item_type::music;
-	}
-	else if ((!list_format_file.contains(FileManager::getFormatFile(absolute_path))))
-	{
-		type = item_type::unknown;
-	}
-	return type;
 }
 
 void Explorer::OpenFile() const

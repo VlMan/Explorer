@@ -5,10 +5,10 @@
 
 class ItemCreator{
 public:
-    static Item * CreateItem(const ItemFactory::ItemFactoryData& data, const QString& default_style_sheet, QWidget* parent) {
+    static Item * CreateItem(const ItemFactory::ItemFactoryData& data, const QString& default_style_sheet, QWidget* watcher) {
         static const ItemFactory item_factory;
 
-        Item* item = item_factory.createItem(ItemFactory::ItemFactoryData{ data.type, data.absolute_path, data.parent, data.geometry });
+        Item* item = item_factory.createItem(data);
         if (!item) {
             throw std::runtime_error("Failed to create item");
         }
@@ -17,7 +17,7 @@ public:
         item->SetType(data.type);
         item->setObjectName(data.absolute_path);
         item->setStyleSheet(default_style_sheet);
-        item->installEventFilter(parent);
+        item->installEventFilter(watcher);
 
         return item;
     }
